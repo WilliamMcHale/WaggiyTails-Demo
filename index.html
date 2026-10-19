@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Waggy Tails – Daycare App (Alpha)</title>
+<style>
+:root{
+  --bg:#f6f4ef;--card:#ffffff;--ink:#1f2328;--muted:#5d6670;--line:#e3dfd6;
+  --brand:#1f6f5c;--brand-soft:#e2f0eb;
+  --green:#1e7b3a;--green-bg:#e3f4e8;
+  --amber:#8a5a00;--amber-bg:#ffefc2;
+  --red:#b42318;--red-bg:#fde4e1;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.4;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+header{background:var(--brand);color:#fff;padding:14px 16px 12px}
+header h1{margin:0;font-size:21px}
+header p{margin:2px 0 0;font-size:14px;opacity:.92}
+.sample{background:#fff3c4;color:#5c4400;text-align:center;font-weight:700;font-size:14px;padding:7px 12px;border-bottom:1px solid #e9d68a}
+main{max-width:720px;margin:0 auto;padding:14px 12px}
+h2{font-size:20px;margin:6px 0 10px}
+h3{font-size:17px;margin:0}
+.muted{color:var(--muted);font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+button{font:inherit;cursor:pointer}
+.btn{min-height:56px;border-radius:12px;border:2px solid var(--brand);background:var(--brand);color:#fff;font-weight:700;padding:10px 16px;font-size:17px}
+.btn.ghost{background:#fff;color:var(--brand)}
+.btn:disabled{background:#d9d9d9;border-color:#d9d9d9;color:#666;cursor:not-allowed}
+.btn.full{width:100%}
+select{font:inherit;font-size:17px;width:100%;min-height:56px;border-radius:12px;border:2px solid var(--line);padding:8px 12px;background:#fff}
+label.lbl{display:block;font-weight:700;margin:0 0 6px}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;min-height:76px;border:0;background:none;font-size:15px;font-weight:700;color:var(--muted)}
+nav.tabs button .ic{display:block;font-size:26px;line-height:1.1}
+nav.tabs button[aria-selected="true"]{color:var(--brand);box-shadow:inset 0 5px 0 var(--brand);background:var(--brand-soft)}
+
+/* week */
+.weeknav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.weeknav .btn{min-width:64px}
+.day{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--line);border-radius:14px;background:#fff;margin-bottom:10px}
+.day.sel{border-color:var(--brand)}
+.day .dname{font-weight:800;width:92px;flex:none}
+.day .meta{flex:1;min-width:0}
+.bar{height:10px;border-radius:6px;background:#eee;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--brand)}
+.bar i.full{background:var(--red)}
+.left{font-weight:800}
+.left.full{color:var(--red)}
+.day .btn{flex:none;min-width:96px}
+.day.past{opacity:.55}
+.msg{border-radius:14px;padding:14px;margin-bottom:12px;font-weight:600}
+.msg.ok{background:var(--green-bg);color:#14532d}
+.msg.warn{background:var(--amber-bg);color:#5c3d00}
+.msg.bad{background:var(--red-bg);color:#7a1610}
+.msg .btn{margin-top:10px}
+.booked-list{list-style:none;margin:8px 0 0;padding:0}
+.booked-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.booked-list li .btn{min-height:48px;padding:6px 12px;font-size:15px}
+
+/* badges */
+.badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:14px;font-weight:800}
+.b-green{background:var(--green-bg);color:var(--green)}
+.b-amber{background:var(--amber-bg);color:var(--amber)}
+.b-red{background:var(--red-bg);color:var(--red)}
+
+/* today */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:24px}
+.dog.red{border-left:8px solid var(--red)}
+.dog.amber{border-left:8px solid #e0a100}
+.dog.green{border-left:8px solid var(--green)}
+.dog-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.blocked{background:var(--red-bg);color:#7a1610;border-radius:10px;padding:10px;margin-top:10px;font-weight:700}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.row .btn{flex:1}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.notes button{min-height:64px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:17px;font-weight:800}
+.notes button:active{background:var(--brand-soft)}
+.notes button:disabled{opacity:.45;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--brand-soft);color:#174d40;border-radius:999px;padding:4px 10px;font-size:14px;font-weight:700}
+.filter{display:flex;gap:8px;margin-bottom:12px}
+.filter button{flex:1;min-height:52px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:700}
+.filter button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:#174d40}
+
+/* pupdate */
+.timeline{list-style:none;margin:10px 0 0;padding:0}
+.timeline li{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.timeline .t{font-weight:800;width:56px;flex:none;color:var(--muted)}
+.timeline .e{font-size:22px}
+/* dogs */
+.profile{display:flex;gap:14px;align-items:flex-start}
+.avatar{width:96px;height:96px;border-radius:16px;flex:none;object-fit:cover;background:#eee;border:2px solid var(--line)}
+.code{display:inline-block;background:#1f2328;color:#fff;border-radius:8px;padding:3px 9px;font-weight:800;font-size:15px;letter-spacing:.5px}
+.facts{margin:8px 0 0;padding:0;list-style:none;font-size:15px}
+.facts li{padding:2px 0}
+.care{background:#eef4ff;color:#1d3b72;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:15px;font-weight:600}
+.photo-btn{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:12px;border:2px dashed var(--brand);color:var(--brand);font-weight:700;margin-top:10px;cursor:pointer}
+.photo-btn input{display:none}
+.search{width:100%;font:inherit;font-size:18px;min-height:56px;border-radius:12px;border:2px solid var(--line);padding:8px 14px;background:#fff}
+.search:focus,.staffnote:focus{outline:none;border-color:var(--brand)}
+.staffnote{width:100%;font:inherit;font-size:16px;min-height:84px;border-radius:12px;border:2px solid var(--line);padding:10px;margin-top:6px;resize:vertical;background:#fffdf7}
+.saved{font-size:13px;color:var(--green);font-weight:700;margin-left:6px;opacity:0;transition:opacity .2s}
+.saved.show{opacity:1}
+.intoday{display:inline-block;background:var(--green-bg);color:var(--green);border-radius:999px;padding:2px 8px;font-size:13px;font-weight:800;margin-left:6px;vertical-align:middle}
+.codeentry{display:flex;gap:8px}
+.codeentry input{flex:1;font:inherit;font-size:22px;min-height:56px;border-radius:12px;border:2px solid var(--line);padding:8px 12px;letter-spacing:2px;min-width:0}
+footer{max-width:720px;margin:0 auto;padding:0 12px 16px;text-align:center}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));background:#1f2328;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🐾 Waggy Tails Dog Daycare</h1>
+  <p>Lucan, Co. Dublin · Internal app · Alpha</p>
+</header>
+<div class="sample">SAMPLE DATA – all dogs, owners and bookings are made up for this demo</div>
+
+<main id="app"></main>
+
+<footer>
+  <p class="muted">Changes save in this browser and stay after a refresh.</p>
+  <button class="btn ghost" id="resetBtn">Reset sample data</button>
+</footer>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="bookings"><span class="ic">📅</span>Bookings</button>
+  <button role="tab" data-tab="dogs"><span class="ic">🐕</span>Dogs</button>
+  <button role="tab" data-tab="today"><span class="ic">✅</span>Today</button>
+  <button role="tab" data-tab="pupdate"><span class="ic">💬</span>Pupdate</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- date helpers (local time) ---------- */
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function parse(s){var p=s.split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function addDays(s,n){var d=parse(s);d.setDate(d.getDate()+n);return iso(d);}
+function diffDays(a,b){return Math.round((parse(b)-parse(a))/864e5);}
+function isWeekday(s){var g=parse(s).getDay();return g>=1&&g<=5;}
+function mondayOf(s){var g=(parse(s).getDay()+6)%7;return addDays(s,-g);}
+function nice(s){return parse(s).toLocaleDateString("en-IE",{weekday:"short",day:"numeric",month:"short"});}
+function niceLong(s){return parse(s).toLocaleDateString("en-IE",{weekday:"long",day:"numeric",month:"long"});}
+function nowTime(){var d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+var REAL_TODAY = iso(new Date());
+// Daycare opens Monday to Friday. "Today" = today, or the next open day at weekends.
+var OPEN_DAY = REAL_TODAY; while(!isWeekday(OPEN_DAY)) OPEN_DAY = addDays(OPEN_DAY,1);
+var CAPACITY = 40;
+var WEEKS = 3;
+
+/* ---------- sample data ---------- */
+var DOG_NAMES = ["Bella","Max","Luna","Charlie","Daisy","Milo","Lola","Buddy","Coco","Teddy","Rosie","Bailey","Molly","Oscar","Ruby","Alfie","Poppy","Archie","Bonnie","Finn","Nala","Rocky","Willow","Bruno","Hazel","Murphy","Penny","Toby","Maisie","Louie","Bran","Sasha","Rex","Ellie","Ozzy","Pippa","Benji","Juno","Sam","Tilly","Rufus","Mabel","Shadow","Cooper","Lexi","Paddy"];
+var BREEDS = ["Labrador","Cocker Spaniel","Border Collie","Cockapoo","Golden Retriever","Jack Russell","Beagle","Cavapoo","Springer Spaniel","Dachshund","French Bulldog","Husky","Labradoodle","Staffie","Shih Tzu"];
+var FIRST = ["Ciara","Seán","Aoife","Darragh","Niamh","Conor","Orla","Eoin","Siobhán","Cian","Róisín","Fionn","Clodagh","Oisín","Gráinne","Ruairí","Sinéad","Tadhg","Méabh","Pádraig"];
+var LAST = ["Byrne","Murphy","Kelly","O'Brien","Walsh","Ryan","Doyle","Lynch","Kavanagh","Brennan","Quinn","Farrell","Daly","Hughes","Gallagher","Keane","Moran","Healy","Duffy","Tierney"];
+
+var BREED_SIZE=["Large","Medium","Medium","Medium","Large","Small","Medium","Small","Medium","Small","Small","Large","Large","Medium","Small"];
+var COATS=[["#c8913c","#7a4e1d"],["#2b2b2b","#555"],["#f1e3c8","#c9a46a"],["#8b5a2b","#4a2e12"],["#e8e8e8","#9a9a9a"],["#d9a066","#2b2b2b"],["#b5651d","#f5f5f5"]];
+var CARE=["Allergic to chicken – own food only","Nervous with big dogs – small-dog group","No special needs","Loves fetch, pulls on the lead","Needs a nap after lunch","On joint supplement – give at 12:00 (food bowl)","No special needs","Jumps fences – keep in inner yard","No special needs","Slow eater – feed apart"];
+function ownerName(i){return FIRST[i%20]+" "+LAST[(i*7+Math.floor(i/20)*3)%20];}
+
+// small seeded random, so the sample data is the same every reset
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h;}
+
+function seed(){
+  var dogs = DOG_NAMES.map(function(n,i){
+    var ownerIdx = i<40 ? i : i-40;          // dogs 41-46 share owners with dogs 1-6
+    return {
+      id:"d"+(i+1), name:n, breed:BREEDS[i%BREEDS.length], owner:ownerName(ownerIdx),
+      kc: addDays(OPEN_DAY, 30 + (i*37)%300),   // kennel cough expiry
+      core: addDays(OPEN_DAY, 90 + (i*53)%250), // core vaccines expiry
+      code: String(101 + ownerIdx),             // owner code: same number on the owner's dogs
+      age: 1 + (i*5)%12, sex: i%2 ? "Male" : "Female", size: BREED_SIZE[i%BREEDS.length],
+      coat: i%COATS.length, care: CARE[i%CARE.length], photo: null
+    };
+  });
+  // Deliberate test cases for the vaccination rules
+  dogs[0].kc   = addDays(OPEN_DAY,-3);   // Bella  – kennel cough EXPIRED (red)
+  dogs[1].core = addDays(OPEN_DAY,-20);  // Max    – core vaccines EXPIRED (red)
+  dogs[2].kc   = addDays(OPEN_DAY,2);    // Luna   – expires in 2 days (amber)
+  dogs[3].kc   = addDays(OPEN_DAY,6);    // Charlie– expires in 6 days (amber)
+  dogs[4].core = addDays(OPEN_DAY,13);   // Daisy  – expires in 13 days (amber)
+  dogs[5].kc   = addDays(OPEN_DAY,4);    // Milo   – expires in 4 days (amber; can't be booked after that)
+
+  // Typical demand: Mon & Fri full, Wed half empty
+  var target = {1:40,2:31,3:19,4:33,5:40};
+  var bookings = {};
+  var start = mondayOf(OPEN_DAY);
+  for(var w=0; w<WEEKS; w++){
+    for(var d=0; d<5; d++){
+      var date = addDays(start, w*7+d);
+      var want = target[parse(date).getDay()] - (w===2?5:0);
+      var forced = date===OPEN_DAY ? ["d1","d2","d3","d4","d5","d6"] : [];
+      var pool = dogs.filter(function(g){return forced.indexOf(g.id)<0 && minExpiry(g)>=date;}).map(function(g){return g.id;});
+      var r = rng(hash(date));
+      for(var k=pool.length-1;k>0;k--){var j=Math.floor(r()*(k+1));var t=pool[k];pool[k]=pool[j];pool[j]=t;}
+      bookings[date] = forced.concat(pool).slice(0, want);
+    }
+  }
+  return {v:1, dogs:dogs, bookings:bookings, checkins:{}, notes:{}};
+}
+
+/* ---------- storage ---------- */
+var KEY = "waggytails-alpha-v2";
+var S;
+function load(){try{var raw=localStorage.getItem(KEY);return raw?JSON.parse(raw):null;}catch(e){return null;}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+S = load() || seed(); save();
+
+/* ---------- rules ---------- */
+function dogById(id){for(var i=0;i<S.dogs.length;i++) if(S.dogs[i].id===id) return S.dogs[i]; return null;}
+function minExpiry(g){return g.kc<g.core?g.kc:g.core;}
+function expiringName(g){return g.kc<=g.core?"Kennel cough":"Core vaccines";}
+// red = expired on that date, amber = expires within 14 days, green = fine
+function vaccStatus(g,onDate){
+  var e = minExpiry(g);
+  if(e < onDate) return "red";
+  if(diffDays(onDate,e) <= 14) return "amber";
+  return "green";
+}
+function vaccBadge(g,onDate){
+  var st = vaccStatus(g,onDate), e = minExpiry(g), n = diffDays(onDate,e);
+  if(st==="red") return '<span class="badge b-red">⛔ '+esc(expiringName(g))+' expired '+nice(e)+'</span>';
+  if(st==="amber") return '<span class="badge b-amber">⚠ '+esc(expiringName(g))+' expires in '+n+' day'+(n===1?"":"s")+'</span>';
+  return '<span class="badge b-green">✓ Vaccinations in date</span>';
+}
+function booked(date){return S.bookings[date]||[];}
+function placesLeft(date){return CAPACITY - booked(date).length;}
+function openDays(){ // all bookable weekdays we hold data for
+  var out=[], start=mondayOf(OPEN_DAY);
+  for(var i=0;i<WEEKS*7;i++){var d=addDays(start,i); if(isWeekday(d)) out.push(d);}
+  return out;
+}
+function canBookOn(g,date){
+  return date>=OPEN_DAY && booked(date).indexOf(g.id)<0 && placesLeft(date)>0 && minExpiry(g)>=date;
+}
+function nearestDayWithRoom(g,date){
+  var days = openDays().filter(function(d){return canBookOn(g,d);});
+  days.sort(function(a,b){var da=Math.abs(diffDays(date,a)),db=Math.abs(diffDays(date,b));return da-db || (a<b?-1:1);});
+  return days[0]||null;
+}
+// returns {ok:true} or {ok:false, reason, suggestion}
+function tryBook(dogId,date){
+  var g = dogById(dogId);
+  if(!g) return {ok:false,reason:"Pick a dog first."};
+  if(date < OPEN_DAY) return {ok:false,reason:"That day has already passed."};
+  if(booked(date).indexOf(g.id)>=0) return {ok:false,reason:g.name+" is already booked on "+nice(date)+"."};
+  if(minExpiry(g) < date) return {ok:false,vacc:true,reason:"Can't book "+g.name+": "+expiringName(g)+" out of date on "+nice(date)+" (expires "+nice(minExpiry(g))+"). Update the record when the owner shows a new certificate."};
+  if(placesLeft(date)<=0){
+    var alt = nearestDayWithRoom(g,date);
+    return {ok:false,full:true,reason:nice(date)+" is full (40 of 40 places).",suggestion:alt};
+  }
+  S.bookings[date] = booked(date).concat([g.id]); save();
+  return {ok:true};
+}
+
+/* ---------- UI state ---------- */
+var ui = {tab:"today", week:0, dog:"", msg:null, filter:"all", code:"", codeErr:null, openDay:null, q:"", dogFilter:"all"};
+try{var t=sessionStorage.getItem("wt-tab"); if(t) ui.tab=t;}catch(e){}
+
+var app = document.getElementById("app");
+function toast(text){var t=document.getElementById("toast");t.textContent=text;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show");},1600);}
+
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(function(b){b.setAttribute("aria-selected", b.dataset.tab===ui.tab?"true":"false");});
+  if(ui.tab==="bookings") renderBookings();
+  else if(ui.tab==="dogs") renderDogs();
+  else if(ui.tab==="today") renderToday();
+  else renderPupdate();
+}
+
+/* ---------- Bookings view ---------- */
+function renderBookings(){
+  var start = addDays(mondayOf(OPEN_DAY), ui.week*7);
+  var dogs = S.dogs.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  var g = dogById(ui.dog);
+  var h = '<h2>Bookings</h2>';
+  h += '<div class="card"><label class="lbl" for="dogSel">1. Pick a dog</label><select id="dogSel"><option value="">– Choose a dog –</option>';
+  dogs.forEach(function(d){h+='<option value="'+d.id+'"'+(d.id===ui.dog?" selected":"")+'>'+esc(d.name)+' – '+esc(d.owner)+' · #'+esc(d.code)+'</option>';});
+  h += '</select>';
+  if(g){
+    h += '<p style="margin:10px 0 0">'+vaccBadge(g,OPEN_DAY)+'</p>';
+    h += '<p class="muted" style="margin:6px 0 0">Kennel cough until '+nice(g.kc)+' · Core vaccines until '+nice(g.core)+'</p>';
+    h += '<button class="btn ghost full" style="margin-top:10px" data-act="renew" data-dog="'+g.id+'">Owner showed new certificate: renew both for 1 year</button>';
+  }
+  h += '<p class="muted" style="margin:10px 0 0">2. Tap <b>Book</b> on a day below.</p></div>';
+
+  if(ui.msg){
+    h += '<div class="msg '+ui.msg.cls+'">'+esc(ui.msg.text);
+    if(ui.msg.suggestion){h+='<br><button class="btn full" data-act="book" data-date="'+ui.msg.suggestion+'">Book '+esc(nice(ui.msg.suggestion))+' instead ('+placesLeft(ui.msg.suggestion)+' places left)</button>';}
+    h += '</div>';
+  }
+
+  h += '<div class="weeknav"><button class="btn ghost" data-act="week" data-d="-1" '+(ui.week<=0?"disabled":"")+' aria-label="Previous week">◀</button>';
+  h += '<b>Week of '+esc(nice(start))+'</b>';
+  h += '<button class="btn ghost" data-act="week" data-d="1" '+(ui.week>=WEEKS-1?"disabled":"")+' aria-label="Next week">▶</button></div>';
+
+  for(var i=0;i<5;i++){
+    var date = addDays(start,i), n = booked(date).length, left = CAPACITY-n, past = date<OPEN_DAY, full = left<=0;
+    h += '<div class="day'+(past?" past":"")+(ui.openDay===date?" sel":"")+'">';
+    h += '<div class="dname">'+esc(nice(date))+(date===OPEN_DAY?'<br><span class="muted">today</span>':'')+'</div>';
+    h += '<div class="meta"><span class="left'+(full?" full":"")+'">'+(full?"FULL":left+" places left")+'</span> <span class="muted">· '+n+'/40</span>';
+    h += '<div class="bar"><i class="'+(full?"full":"")+'" style="width:'+Math.min(100,n/CAPACITY*100)+'%"></i></div>';
+    h += '<button class="muted" style="background:none;border:0;padding:6px 0 0;text-decoration:underline;font-size:15px" data-act="openday" data-date="'+date+'">'+(ui.openDay===date?"Hide":"Show")+' dogs</button></div>';
+    h += past ? '' : '<button class="btn" data-act="book" data-date="'+date+'">Book</button>';
+    h += '</div>';
+    if(ui.openDay===date){
+      h += '<div class="card"><b>Booked on '+esc(nice(date))+'</b><ul class="booked-list">';
+      booked(date).map(dogById).filter(Boolean).sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(d){
+        h += '<li><span>'+esc(d.name)+' <span class="muted">· '+esc(d.owner)+'</span></span>'+(past?'':'<button class="btn ghost" data-act="cancel" data-date="'+date+'" data-dog="'+d.id+'">Cancel</button>')+'</li>';
+      });
+      h += '</ul></div>';
+    }
+  }
+  app.innerHTML = h;
+  document.getElementById("dogSel").onchange = function(e){ui.dog=e.target.value;ui.msg=null;render();};
+}
+
+/* ---------- pictures ---------- */
+// Drawn placeholder picture for sample dogs (no copyright issues, works offline)
+function drawnDog(g){
+  var c = COATS[g.coat||0], fur=c[0], ear=c[1];
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#e2f0eb"/>'+
+    '<ellipse cx="24" cy="44" rx="13" ry="24" fill="'+ear+'" transform="rotate(18 24 44)"/>'+
+    '<ellipse cx="76" cy="44" rx="13" ry="24" fill="'+ear+'" transform="rotate(-18 76 44)"/>'+
+    '<ellipse cx="50" cy="54" rx="29" ry="31" fill="'+fur+'"/>'+
+    '<ellipse cx="50" cy="69" rx="16" ry="12" fill="#fff" opacity=".85"/>'+
+    '<circle cx="39" cy="49" r="4.5" fill="#1f2328"/><circle cx="61" cy="49" r="4.5" fill="#1f2328"/>'+
+    '<circle cx="40.5" cy="47.5" r="1.4" fill="#fff"/><circle cx="62.5" cy="47.5" r="1.4" fill="#fff"/>'+
+    '<ellipse cx="50" cy="63" rx="6" ry="4.5" fill="#1f2328"/>'+
+    '<path d="M44 71 Q50 76 56 71" stroke="#1f2328" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
+function picOf(g){return g.photo || drawnDog(g);}
+// shrink a camera photo so it fits in browser storage
+function resizeImage(file, cb){
+  var reader = new FileReader();
+  reader.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var size=240, cv=document.createElement("canvas"); cv.width=size; cv.height=size;
+      var s=Math.min(img.width,img.height), ctx=cv.getContext("2d");
+      ctx.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,size,size);
+      cb(cv.toDataURL("image/jpeg",0.75));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- Dogs view (staff): all dogs, search, staff notes ---------- */
+function renderDogs(){
+  var h = '<h2>All dogs</h2>';
+  h += '<input class="search" id="dogSearch" type="search" placeholder="🔍 Search name, owner or #code" value="'+esc(ui.q||"")+'" autocomplete="off">';
+  h += '<div class="filter" style="margin-top:10px"><button data-act="dogfilter" data-f="all" aria-pressed="'+(ui.dogFilter!=="today")+'">All dogs</button><button data-act="dogfilter" data-f="today" aria-pressed="'+(ui.dogFilter==="today")+'">In today</button></div>';
+  h += '<div id="dogList"></div>';
+  h += '<p class="muted">Pictures: drawn placeholders for the sample dogs. Staff can take a real photo, which is saved in this browser only.</p>';
+  app.innerHTML = h;
+  var inp = document.getElementById("dogSearch");
+  inp.addEventListener("input", function(){ ui.q = inp.value; renderDogList(); });
+  renderDogList();
+}
+function renderDogList(){
+  var date = OPEN_DAY, q = (ui.q||"").trim().toLowerCase().replace(/^#/,"");
+  var todayIds = booked(date);
+  var dogs = S.dogs.filter(function(d){
+    if(ui.dogFilter==="today" && todayIds.indexOf(d.id)<0) return false;
+    if(!q) return true;
+    return (d.name+" "+d.owner+" "+d.breed+" "+d.code).toLowerCase().indexOf(q)>=0;
+  }).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var h = '<p class="muted" style="margin:8px 0 10px">Showing '+dogs.length+' of '+S.dogs.length+' dogs. Each dog\'s code matches its owner\'s code (dogs from the same home share a code).</p>';
+  dogs.forEach(function(d){
+    var st = vaccStatus(d,date), inToday = todayIds.indexOf(d.id)>=0;
+    var siblings = S.dogs.filter(function(x){return x.code===d.code && x.id!==d.id;}).map(function(x){return x.name;});
+    h += '<div class="card dog '+st+'"><div class="profile">';
+    h += '<img class="avatar" alt="Picture of '+esc(d.name)+'" src="'+picOf(d)+'">';
+    h += '<div style="min-width:0"><h3>'+esc(d.name)+(inToday?'<span class="intoday">In today</span>':'')+'</h3><span class="code">#'+esc(d.code)+'</span>';
+    h += '<ul class="facts"><li>'+esc(d.breed)+' · '+esc(d.sex)+' · '+d.age+' yr'+(d.age===1?'':'s')+' · '+esc(d.size)+'</li>';
+    h += '<li>Owner: <b>'+esc(d.owner)+'</b> (#'+esc(d.code)+')</li>';
+    if(siblings.length) h += '<li>Same home as: '+esc(siblings.join(", "))+'</li>';
+    h += '</ul></div></div>';
+    h += '<div style="margin-top:8px">'+vaccBadge(d,date)+'</div>';
+    h += '<div class="muted" style="margin-top:4px">Kennel cough until '+esc(nice(d.kc))+' · Core until '+esc(nice(d.core))+'</div>';
+    if(d.care && d.care!=="No special needs") h += '<div class="care">📋 '+esc(d.care)+'</div>';
+    h += '<div style="margin-top:10px"><label class="lbl" for="sn-'+d.id+'" style="display:inline">📝 Staff notes: personality &amp; likes</label><span class="saved" id="sv-'+d.id+'">Saved ✓</span>';
+    h += '<textarea class="staffnote" id="sn-'+d.id+'" data-staffnote="'+d.id+'" placeholder="e.g. Loves the tennis ball, shy with new dogs at first, best friends with Luna">'+esc(d.staffNotes||"")+'</textarea></div>';
+    h += '<label class="photo-btn">📷 '+(d.photo?'Change photo':'Take / add photo')+'<input type="file" accept="image/*" capture="environment" data-photo="'+d.id+'"></label>';
+    if(d.photo) h += '<button class="muted" style="background:none;border:0;padding:6px 0 0;text-decoration:underline" data-act="rmphoto" data-dog="'+d.id+'">Remove photo</button>';
+    h += '</div>';
+  });
+  if(!dogs.length) h += '<div class="card">No dogs match "'+esc(ui.q)+'".</div>';
+  document.getElementById("dogList").innerHTML = h;
+}
+
+/* ---------- Today view ---------- */
+function renderToday(){
+  var date = OPEN_DAY;
+  var ids = booked(date);
+  var ci = S.checkins[date]||{};
+  var dogs = ids.map(dogById).filter(Boolean);
+  var rank = {red:0,amber:1,green:2};
+  dogs.sort(function(a,b){return rank[vaccStatus(a,date)]-rank[vaccStatus(b,date)] || a.name.localeCompare(b.name);});
+  var nIn = dogs.filter(function(d){return ci[d.id];}).length;
+  var nAlert = dogs.filter(function(d){return vaccStatus(d,date)!=="green";}).length;
+
+  var h = '<h2>Today · '+esc(niceLong(date))+'</h2>';
+  if(date!==REAL_TODAY) h += '<p class="muted">Closed at weekends, so this shows the next open day.</p>';
+  h += '<div class="stats"><div class="stat"><b>'+dogs.length+'</b>booked</div><div class="stat"><b>'+nIn+'</b>checked in</div><div class="stat"><b>'+nAlert+'</b>vaccine alerts</div></div>';
+  h += '<div class="filter"><button data-act="filter" data-f="all" aria-pressed="'+(ui.filter==="all")+'">All</button><button data-act="filter" data-f="waiting" aria-pressed="'+(ui.filter==="waiting")+'">Not in yet</button><button data-act="filter" data-f="in" aria-pressed="'+(ui.filter==="in")+'">Checked in</button></div>';
+
+  dogs.forEach(function(d){
+    var st = vaccStatus(d,date), isIn = !!ci[d.id];
+    if(ui.filter==="waiting" && isIn) return;
+    if(ui.filter==="in" && !isIn) return;
+    var notes = ((S.notes[date]||{})[d.id])||[];
+    h += '<div class="card dog '+st+'"><div class="dog-top" style="justify-content:flex-start;gap:12px"><img class="avatar" style="width:56px;height:56px;border-radius:12px" alt="" src="'+picOf(d)+'"><div><h3>'+esc(d.name)+' <span class="code" style="font-size:13px">#'+esc(d.code)+'</span></h3><div class="muted">'+esc(d.breed)+' · Owner: '+esc(d.owner)+'</div></div></div>';
+    h += '<div style="margin-top:6px">'+vaccBadge(d,date)+'</div>';
+    if(st==="red"){
+      h += '<div class="blocked">Cannot check in: '+esc(expiringName(d))+' expired on '+esc(nice(minExpiry(d)))+'.</div>';
+      h += '<div class="row"><button class="btn ghost" data-act="renew" data-dog="'+d.id+'">Owner showed new certificate: renew</button></div>';
+    } else if(!isIn){
+      h += '<div class="row"><button class="btn" data-act="checkin" data-dog="'+d.id+'">✓ Check in</button></div>';
+    } else {
+      h += '<div class="row"><span class="badge b-green" style="font-size:15px;padding:8px 12px">Checked in '+esc(ci[d.id])+'</span><button class="btn ghost" style="flex:0 0 auto;min-height:44px" data-act="uncheck" data-dog="'+d.id+'">Undo</button></div>';
+    }
+    if(st!=="red"){ h += '<div class="notes">';
+    [["ate","🍽️ Ate"],["walked","🦮 Walked"],["played","🎾 Played"],["napped","💤 Napped"]].forEach(function(n){
+      h += '<button data-act="note" data-dog="'+d.id+'" data-n="'+n[0]+'"'+(isIn?"":" disabled")+'>'+n[1]+'</button>';
+    });
+    h += '</div>'; }
+    if(!isIn && st!=="red") h += '<p class="muted" style="margin:6px 0 0">Check in first to add notes.</p>';
+    if(notes.length){
+      h += '<div class="chips">'+notes.map(function(x){return '<span class="chip">'+esc(LABEL[x.n])+' '+esc(x.t)+'</span>';}).join("")+'</div>';
+      h += '<button class="muted" style="background:none;border:0;padding:6px 0 0;text-decoration:underline" data-act="undonote" data-dog="'+d.id+'">Undo last note</button>';
+    }
+    h += '</div>';
+  });
+  if(!dogs.length) h += '<div class="card">No dogs booked today.</div>';
+  app.innerHTML = h;
+}
+var LABEL = {ate:"🍽️ Ate",walked:"🦮 Walked",played:"🎾 Played",napped:"💤 Napped"};
+var FRIENDLY = {ate:"Had their food",walked:"Went for a walk",played:"Played with friends",napped:"Had a nap"};
+
+/* ---------- Pupdate view ---------- */
+function renderPupdate(){
+  var h = '<h2>Pupdate</h2>';
+  h += '<div class="card"><label class="lbl" for="codeIn">Owner code</label><div class="codeentry"><input id="codeIn" type="tel" inputmode="numeric" maxlength="4" placeholder="e.g. 101" value="'+esc(ui.code||"")+'" autocomplete="off"><button class="btn" type="button" id="codeBtn">Open</button></div>';
+  if(ui.codeErr) h += '<p class="msg bad" style="margin:10px 0 0">'+esc(ui.codeErr)+'</p>';
+  h += '<p class="muted" style="margin:8px 0 0">Each owner has their own code (sample codes are shown on the Dogs tab). An owner sees only their own dog, nothing about any other dog or owner.</p>';
+  if(ui.code && !ui.codeErr) h += '<button class="btn ghost full" style="margin-top:10px" data-act="signout">Sign out</button>';
+  h += '</div>';
+
+  if(ui.code && !ui.codeErr){
+    var date = OPEN_DAY;
+    var mine = S.dogs.filter(function(d){return d.code===ui.code;});
+    h += '<p class="muted">Signed in as owner #'+esc(ui.code)+'</p>';
+    mine.forEach(function(d){
+      var isBooked = booked(date).indexOf(d.id)>=0;
+      var ci = (S.checkins[date]||{})[d.id];
+      var notes = ((S.notes[date]||{})[d.id])||[];
+      h += '<div class="card"><div class="profile" style="align-items:center"><img class="avatar" style="width:72px;height:72px" alt="Picture of '+esc(d.name)+'" src="'+picOf(d)+'"><h3>'+esc(d.name)+"'s day · "+esc(nice(date))+'</h3></div>';
+      if(!isBooked){
+        h += '<p>'+esc(d.name)+' isn\'t booked in today.</p>';
+      } else if(!ci){
+        h += vaccStatus(d,date)==="red"
+          ? '<p class="blocked">'+esc(d.name)+' can\'t be checked in until a new vaccination certificate is shown. Please contact Waggy Tails.</p>'
+          : '<p>'+esc(d.name)+' hasn\'t arrived yet. Notes appear here once staff check '+esc(d.name)+' in on the Today tab.</p>';
+      } else {
+        h += '<ul class="timeline"><li><span class="t">'+esc(ci)+'</span><span class="e">👋</span><span>Arrived and checked in</span></li>';
+        notes.forEach(function(x){h += '<li><span class="t">'+esc(x.t)+'</span><span class="e">'+LABEL[x.n].split(" ")[0]+'</span><span>'+esc(FRIENDLY[x.n])+'</span></li>';});
+        h += '</ul>';
+        if(!notes.length) h += '<p class="muted">No notes yet today. Check back soon!</p>';
+      }
+      var next = openDays().filter(function(x){return x>date && booked(x).indexOf(d.id)>=0;}).slice(0,3);
+      h += '<p class="muted" style="margin:10px 0 0">Next days booked: '+(next.length?next.map(nice).join(", "):"none")+'</p></div>';
+    });
+  }
+  app.innerHTML = h;
+  function openCode(){
+    var v = document.getElementById("codeIn").value.replace(/[^0-9]/g,"");
+    if(!v){ ui.code=""; ui.codeErr="Type your owner code first, e.g. 101."; render(); return; }
+    var found = S.dogs.some(function(d){return d.code===v;});
+    ui.code = v; ui.codeErr = found ? null : "No owner found with code "+v+". Check the code and try again.";
+    render();
+  }
+  document.getElementById("codeBtn").onclick = openCode;
+  document.getElementById("codeIn").onkeydown = function(e){ if(e.key==="Enter"){ e.preventDefault(); openCode(); } };
+}
+
+/* ---------- actions ---------- */
+app.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var act = b.dataset.act, date = b.dataset.date || OPEN_DAY, dog = b.dataset.dog;
+  if(act==="week"){ui.week=Math.max(0,Math.min(WEEKS-1,ui.week+Number(b.dataset.d)));ui.openDay=null;}
+  else if(act==="openday"){ui.openDay = ui.openDay===date?null:date;}
+  else if(act==="book"){
+    if(!ui.dog){ui.msg={cls:"warn",text:"Pick a dog at the top first."};}
+    else{
+      var r = tryBook(ui.dog,date), g=dogById(ui.dog);
+      if(r.ok){ui.msg={cls:"ok",text:"✓ "+g.name+" booked for "+nice(date)+". "+placesLeft(date)+" places left."};}
+      else if(r.full){ui.msg={cls:"warn",text:r.reason+(r.suggestion?" Nearest day with room for "+g.name+": "+nice(r.suggestion)+".":" No other day with room in the next 3 weeks."),suggestion:r.suggestion};}
+      else{ui.msg={cls:r.vacc?"bad":"warn",text:r.reason};}
+    }
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  else if(act==="cancel"){S.bookings[date]=booked(date).filter(function(x){return x!==dog;});save();toast("Booking cancelled");}
+  else if(act==="renew"){var g2=dogById(dog);g2.kc=addDays(REAL_TODAY,365);g2.core=addDays(REAL_TODAY,365);save();ui.msg=null;toast(g2.name+"'s vaccinations updated");}
+  else if(act==="checkin"){var d1=dogById(dog); if(vaccStatus(d1,OPEN_DAY)==="red") return; S.checkins[OPEN_DAY]=S.checkins[OPEN_DAY]||{}; S.checkins[OPEN_DAY][dog]=nowTime(); save(); toast(d1.name+" checked in");}
+  else if(act==="uncheck"){if(S.checkins[OPEN_DAY]) delete S.checkins[OPEN_DAY][dog]; save();}
+  else if(act==="note"){S.notes[OPEN_DAY]=S.notes[OPEN_DAY]||{}; var arr=S.notes[OPEN_DAY][dog]=S.notes[OPEN_DAY][dog]||[]; arr.push({n:b.dataset.n,t:nowTime()}); save(); toast(LABEL[b.dataset.n]+" noted for "+dogById(dog).name);}
+  else if(act==="undonote"){var a=((S.notes[OPEN_DAY]||{})[dog])||[]; a.pop(); save();}
+  else if(act==="filter"){ui.filter=b.dataset.f;}
+  else if(act==="dogfilter"){ui.dogFilter=b.dataset.f; renderDogList(); document.querySelectorAll('[data-act=dogfilter]').forEach(function(x){x.setAttribute("aria-pressed", x.dataset.f===ui.dogFilter);}); return;}
+  else if(act==="rmphoto"){dogById(dog).photo=null;save();}
+  else if(act==="signout"){ui.code="";ui.codeErr=null;}
+  render();
+});
+
+app.addEventListener("input", function(e){
+  var ta = e.target.closest("textarea[data-staffnote]"); if(!ta) return;
+  var g = dogById(ta.dataset.staffnote); g.staffNotes = ta.value; save();
+  var sv = document.getElementById("sv-"+g.id); if(sv){sv.classList.add("show"); clearTimeout(sv._t); sv._t=setTimeout(function(){sv.classList.remove("show");},1200);}
+});
+
+app.addEventListener("change", function(e){
+  var inp = e.target.closest("input[data-photo]"); if(!inp || !inp.files || !inp.files[0]) return;
+  var g = dogById(inp.dataset.photo);
+  resizeImage(inp.files[0], function(url){
+    g.photo = url;
+    try{ localStorage.setItem(KEY,JSON.stringify(S)); toast("Photo saved for "+g.name); }
+    catch(err){ g.photo=null; toast("Phone storage full: photo not saved"); }
+    if(ui.tab==="dogs") renderDogList(); else render();
+  });
+});
+
+document.querySelectorAll("nav.tabs button").forEach(function(b){
+  b.onclick=function(){ui.tab=b.dataset.tab;ui.msg=null;try{sessionStorage.setItem("wt-tab",ui.tab);}catch(e){}render();window.scrollTo(0,0);};
+});
+document.getElementById("resetBtn").onclick=function(){
+  if(confirm("Reset all sample data? Bookings, check-ins and notes you added will be cleared.")){S=seed();save();ui.msg=null;render();toast("Sample data reset");}
+};
+
+render();
+})();
+</script>
+</body>
+</html>
